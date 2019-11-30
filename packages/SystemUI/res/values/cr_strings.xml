@@ -156,4 +156,7 @@
     <!-- Sneeky Analog clock -->
     <string name="clock_title_sneeky" translatable="false">Sneeky</string>
 
+    <!-- Name of the battery status bar icon. -->
+    <string name="status_bar_battery">Battery</string>
+
 </resources>

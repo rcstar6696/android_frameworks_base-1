@@ -21,6 +21,7 @@ import android.app.AlarmManager;
 import android.app.UiModeManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
@@ -30,6 +31,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.display.AmbientDisplayConfiguration;
 import android.metrics.LogMaker;
+import android.provider.Settings;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.os.UserHandle;
@@ -84,6 +86,7 @@ public class DozeTriggers implements DozeMachine.Part {
 
     private long mNotificationPulseTime;
     private boolean mPulsePending;
+    private boolean mProximityCheckTorch;
 
     private final MetricsLogger mMetricsLogger = Dependency.get(MetricsLogger.class);
 
@@ -352,8 +355,11 @@ public class DozeTriggers implements DozeMachine.Part {
     }
 
     private void tryToggleFlashlight() {
+        boolean ProximityCheckTorch = Settings.System.getIntForUser(mContext.getContentResolver(),
+                  Settings.System.FLASHLIGHT_PROXIMITYCHECK, 1, UserHandle.USER_CURRENT) == 1;
+
         proximityCheckThenCall((result) -> {
-            if (result == ProximityCheck.RESULT_NEAR) {
+            if (result == ProximityCheck.RESULT_NEAR && ProximityCheckTorch) {
                 // in pocket, abort pulse
                 return;
             } else {

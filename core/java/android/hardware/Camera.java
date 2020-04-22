@@ -57,6 +57,7 @@ import com.android.internal.app.IAppOpsService;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -299,27 +300,17 @@ public class Camera {
         /* Force to expose only two cameras
          * if the package name does not falls in this bucket
          */
-        String packageList = SystemProperties.get("vendor.camera.aux.packagelist");
-        String packageBlacklist = SystemProperties.get("vendor.camera.aux.packageblacklist");
-        if (packageList.length() > 0) {
-            TextUtils.StringSplitter splitter = new TextUtils.SimpleStringSplitter(',');
-            splitter.setString(packageList);
+        String packageList = SystemProperties.get("vendor.camera.aux.packagelist", "");
+        String packageBlacklist = SystemProperties.get("vendor.camera.aux.packageblacklist", "");
+        if (!packageList.isEmpty()) {
             exposeAuxCamera = false;
-            for (String str : splitter) {
-                if (packageName.equals(str)) {
-                    exposeAuxCamera = true;
-                    break;
-                }
+            if (Arrays.asList(packageList.split(",")).contains(packageName)) {
+                exposeAuxCamera = true;
             }
-        } else if (packageBlacklist.length() > 0) {
-            TextUtils.StringSplitter splitter = new TextUtils.SimpleStringSplitter(',');
-            splitter.setString(packageBlacklist);
+        } else if (!packageBlacklist.isEmpty()) {
             exposeAuxCamera = true;
-            for (String str : splitter) {
-                if (packageName.equals(str)) {
-                    exposeAuxCamera = false;
-                    break;
-                }
+            if (Arrays.asList(packageBlacklist.split(",")).contains(packageName)) {
+                exposeAuxCamera = false;
             }
         }
         int numberOfCameras = _getNumberOfCameras();
@@ -591,8 +582,17 @@ public class Camera {
             mEventHandler = null;
         }
 
-        return native_setup(new WeakReference<Camera>(this), cameraId, halVersion,
-                ActivityThread.currentOpPackageName());
+        String packageName = ActivityThread.currentOpPackageName();
+
+        // Force HAL1 if the package name is in our 'blacklist'
+        String packageList = SystemProperties.get("vendor.camera.hal1.packagelist", "");
+        if (!packageList.isEmpty()) {
+            if (Arrays.asList(packageList.split(",")).contains(packageName)) {
+                halVersion = CAMERA_HAL_API_VERSION_1_0;
+            }
+        }
+
+        return native_setup(new WeakReference<Camera>(this), cameraId, halVersion, packageName);
     }
 
     private int cameraInitNormal(int cameraId) {
@@ -2108,6 +2108,23 @@ public class Camera {
          * as a set. Either they are all valid, or none of them are.
          */
         public Point mouth = null;
+
+        /**
+         * {@hide}
+         */
+        public int smileDegree = 0;
+        /**
+         * {@hide}
+         */
+        public int smileScore = 0;
+        /**
+         * {@hide}
+         */
+        public int blinkDetected = 0;
+        /**
+         * {@hide}
+         */
+        public int faceRecognised = 0;
     }
 
     /**

@@ -40,6 +40,9 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import static com.android.systemui.statusbar.phone
+        .KeyguardClockPositionAlgorithm.CLOCK_USE_DEFAULT_Y;
+
 /**
  * Plugin for the default clock face used only to provide a preview.
  */
@@ -68,7 +71,7 @@ public class MNMLBoxClockController implements ClockPlugin {
     /**
      * Root view of clock.
      */
-    private ClockLayout mBigClockView;
+    private ClockLayout mView;
 
     /**
      * Text clock in preview view hierarchy.
@@ -98,16 +101,16 @@ public class MNMLBoxClockController implements ClockPlugin {
     }
 
     private void createViews() {
-        mBigClockView = (ClockLayout) mLayoutInflater
+        mView = (ClockLayout) mLayoutInflater
                 .inflate(R.layout.digital_mnml_box, null);
-        mClock = mBigClockView.findViewById(R.id.clock);
-        mDate = mBigClockView.findViewById(R.id.bigDate);
+        mClock = mView.findViewById(R.id.clock);
+        mDate = mView.findViewById(R.id.bigDate);
         onTimeTick();
     }
 
     @Override
     public void onDestroyView() {
-        mBigClockView = null;
+        mView = null;
         mClock = null;
         mDate = null;
     }
@@ -153,20 +156,20 @@ public class MNMLBoxClockController implements ClockPlugin {
 
     @Override
     public View getView() {
-        return null;
+        if (mView == null) {
+            createViews();
+        }
+        return mView;
     }
 
     @Override
     public View getBigClockView() {
-        if (mBigClockView  == null) {
-            createViews();
-        }
-        return mBigClockView;
+        return null;
     }
 
     @Override
     public int getPreferredY(int totalHeight) {
-        return totalHeight / 2;
+        return CLOCK_USE_DEFAULT_Y;
     }
 
     @Override
@@ -193,11 +196,12 @@ public class MNMLBoxClockController implements ClockPlugin {
         DateFormat dateFormat = DateFormat.getInstanceForSkeleton("EEEEMMMMd", Locale.getDefault());
         dateFormat.setContext(DisplayContext.CAPITALIZATION_FOR_STANDALONE);
         mDate.setText(dateFormat.format(mTime.getInstance().getTimeInMillis()));
+
     }
 
     @Override
     public void setDarkAmount(float darkAmount) {
-        mBigClockView.setDarkAmount(darkAmount);
+        mView.setDarkAmount(darkAmount);
     }
 
     @Override

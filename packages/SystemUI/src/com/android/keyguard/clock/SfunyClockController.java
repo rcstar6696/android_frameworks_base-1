@@ -177,7 +177,7 @@ public class SfunyClockController implements ClockPlugin {
     @Override
     public void setDarkAmount(float darkAmount) {
         if (mDarkController != null) {
-            mBigClockView.setDarkAmount(darkAmount);
+            mView.setDarkAmount(darkAmount);
         }
     }
 
